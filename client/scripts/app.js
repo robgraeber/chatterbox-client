@@ -73,8 +73,19 @@ var sendMessage = function(aMessage){
  
 // INIT
 refreshChat(roomName);
+
+refreshRoomList(function(rooms){
+  $('#sidebar').html('');
+  _.each(rooms, function(room, i){
+    $("#sidebar").append($("<li class='roomName'></li>").text(room));
+  });
+})
 // REFRESH
- setInterval(function(){
+
+setInterval(function(){
+  refreshChat(roomName);
+}, 1000);
+setInterval(function(){
   refreshChat(roomName);
  }, 1000);
 

@@ -6,19 +6,27 @@ body {
 }
 #sidebar{
   float: left;
-  width: 100px;
-  height: 100px;
-  background-color: #333333;
+  width: 18.5%;
+  background-color: #999999;
+  text-align:left;
+  padding:10px;
 }
 .inputName{
   width:20%;
   display: inline;
 }
+.roomName{
+  list-style-type: none;
+  font-size:.8em;
+}
 
 .inputContent{
   width: 80%;
 }
-
+#page{
+  margin:auto;
+  width:800px;
+}
 #main {
     float:right;
     width: 500px;
