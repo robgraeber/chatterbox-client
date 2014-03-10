@@ -4,8 +4,23 @@ body {
     padding: 0 25px;
     font-family: arial, sans-serif;
 }
+#sidebar{
+  float: left;
+  width: 100px;
+  height: 100px;
+  background-color: #333333;
+}
+.inputName{
+  width:20%;
+  display: inline;
+}
+
+.inputContent{
+  width: 80%;
+}
 
 #main {
+    float:right;
     width: 500px;
     margin: auto;
     text-align: left;
@@ -46,39 +61,3 @@ body {
     line-height: 13px;
 }
 
-form {
-    padding: 20px;
-    padding-left: 0;
-    margin-bottom: 20px;
-}
-
-form input[type=text] {
-    margin-right: 10px;
-    width: 70%;
-    font-size: 12px;
-    padding: 5px;
-}
-
-.chat {
-    padding: 5px;
-    margin-bottom: 5px;
-    background-color: #eee;
-}
-
-.chat .username {
-    font-weight: 800;
-}
-
-.chat:hover {
-    background-color: #ddd;
-}
-
-.spinner {
-    float: right;
-    height: 46px;
-    margin-bottom: 5px;
-}
-
-.spinner img {
-    padding: 10px;
-}

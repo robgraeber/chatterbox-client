@@ -26,10 +26,12 @@ $.ajax({
   url: 'https://api.parse.com/1/classes/chatterbox',
   type: 'GET',
   contentType: 'application/json',
-  data: {roomname:"4chan"},
   success: function (data) {
     console.log(data);
   },
+  data: {
+      limit:200,
+    },
   error: function (data) {
     // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
     console.error('chatterbox: Failed to send message');

@@ -14,10 +14,33 @@
     <script src="scripts/app.js"></script>
   </head>
   <body>
-    <div id="main">
-      <h1>chatterbox</h1>
-      <!-- Your HTML goes here! -->
-      <div id="chatbox"></div>
+    <div id="page">
+      <div id="sidebar"></div>
+      <div id="main">
+        <h1>chatterbox</h1>
+        <!-- Your HTML goes here! -->
+        <div id="chatbox"></div>
+        <div class="inputLine">
+          <div class="inputName">Room name: </div>
+          <div class="inputContent">
+            <input type="text" name="roomname" value="4chan"/>
+          </div> 
+        </div>
+
+        <div class="inputLine">
+          <div class="inputName">User name: </div>
+          <div class="inputContent">
+            <input type="text" name="username" value="guest"/>
+          </div>  
+        </div>
+
+        <div class="inputLine">
+          <div class="inputName">Message: </div>
+          <div class="inputContent">
+            <input type="text" name="message"/>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
