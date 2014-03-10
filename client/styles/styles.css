@@ -19,7 +19,9 @@ body {
   list-style-type: none;
   font-size:.8em;
 }
-
+.roomName:hover{
+  background-color:lightblue;
+}
 .inputContent{
   width: 80%;
 }

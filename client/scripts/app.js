@@ -12,7 +12,7 @@ var appendDiv = function(messages){
   });
 };
 
-var refreshRoomList = function(aCallback){
+var getRoomList = function(aCallback){
   aCallback = aCallback || function(item){console.log(item)}; 
   $.ajax({
     // always use this url
@@ -32,7 +32,7 @@ var refreshRoomList = function(aCallback){
   })
 };
 
-var refreshChat = function(roomName){
+var getMessages = function(roomName){
   $.ajax({
     // always use this url
     url: 'https://api.parse.com/1/classes/chatterbox',
@@ -70,32 +70,41 @@ var sendMessage = function(aMessage){
     }
   });
 };
- 
-// INIT
-refreshChat(roomName);
-
-refreshRoomList(function(rooms){
+var refreshRoomList = function(rooms){
   $('#sidebar').html('');
   _.each(rooms, function(room, i){
     $("#sidebar").append($("<li class='roomName'></li>").text(room));
   });
-})
+  $("li.roomName").on('click', function(){
+
+    roomName = $(this).text();
+    getMessages(roomName)
+    console.log(roomName);
+  });
+}
+// INIT
+getMessages(roomName);
+getRoomList(refreshRoomList);
 // REFRESH
 
-setInterval(function(){
-  refreshChat(roomName);
-}, 1000);
-setInterval(function(){
-  refreshChat(roomName);
- }, 1000);
-
 $(document).ready(function(){
+  
+  // INPUT MESSAGE
   $("input[name=message]").keypress(function(event){
     if(event.keyCode === 13){
+      roomName = $('input[name=roomname]').val();
       sendMessage($(this).val());
       $(this).val("");
+      getMessages(roomName);
+      getRoomList(refreshRoomList);
     }
-  })
+  });
+  setInterval(function(){
+    getMessages(roomName);
+  }, 1000);
+  setInterval(function(){
+    getRoomList(refreshRoomList);
+  }, 1000);
 });
 
 
