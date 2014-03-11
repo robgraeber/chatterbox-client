@@ -6,7 +6,7 @@ body {
 }
 #sidebar{
   float: left;
-  width: 18.5%;
+  width: 152px;
   background-color: #999999;
   text-align:left;
   padding:10px;
@@ -44,7 +44,14 @@ span.date{
 }
 #page{
   margin:auto;
-  width:800px;
+  width: 1000px;
+}
+#sidebarRight{
+  padding: 10px;
+  background-color: #999999;
+  width: 170px;
+  margin-left: 5px;
+  float:right;
 }
 #main {
     float:right;

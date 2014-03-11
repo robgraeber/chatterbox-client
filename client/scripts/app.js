@@ -84,7 +84,7 @@ var getMessages = function(roomName){
     data: {
       order:"-createdAt",
       limit:10,
-      where:{"roomname":roomName}// order:{"-createdAt":{"$gte":timestamp}},
+      where:JSON.stringify({"roomname":"4chan", "createdAt":{"$gt":{"__type":"Date", "iso":"2013-03-11T09:34:08.256Z"}}})// order:{"-createdAt":{"$gte":timestamp}},
     },
     success: function (data) { 
       console.log(data);
