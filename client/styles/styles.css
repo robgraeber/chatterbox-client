@@ -5,6 +5,7 @@ body {
     font-family: arial, sans-serif;
 }
 #sidebar{
+  overflow: hidden;
   float: left;
   width: 152px;
   background-color: #999999;
@@ -37,6 +38,13 @@ span.date{
   font-size:.8em;
 }
 .roomName:hover{
+  background-color:lightblue;
+}
+.macro{
+  list-style-type: none;
+  font-size:.8em;
+}
+.macro:hover{
   background-color:lightblue;
 }
 .inputContent{
