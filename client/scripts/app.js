@@ -8,10 +8,18 @@ var appendDiv = function(messages){
     var aMessage = item.text || 'default text' ;
     var createdAt = item.createdAt || '?';
     var $node = $("<div class='chatMessage'></div>").text(createdAt +' '+ aUsername.substring(0, 25) +": "+aMessage.substring(0,140));
+    var template = "{{DATE}} {{USERNAME}} {{MESSAGE}}";
+    
+    
     $("#chatbox").append($node);
   });
 };
-
+var templateMe = function(object, pattern){
+  _.each(object, function(value, key){
+    pattern = pattern.replace(RegExp('{{'+key+'}}','g'), value);
+  });
+  return pattern;
+};
 var getRoomList = function(aCallback){
   aCallback = aCallback || function(item){console.log(item)}; 
   $.ajax({
@@ -71,15 +79,14 @@ var sendMessage = function(aMessage){
   });
 };
 var refreshRoomList = function(rooms){
-  $('#sidebar').html('');
+  $('#sidebar #roomlist').html('');
   _.each(rooms, function(room, i){
-    $("#sidebar").append($("<li class='roomName'></li>").text(room));
+    $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
   });
   $("li.roomName").on('click', function(){
 
     roomName = $(this).text();
-    getMessages(roomName)
-    console.log(roomName);
+    getMessages(roomName);
   });
 }
 // INIT
