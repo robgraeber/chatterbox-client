@@ -1,15 +1,123 @@
+/*****************************************************************************/
+/* GLOBAL VARIABLES                                                          */
+/*****************************************************************************/
 var roomName = "4chan";
 var userName = 'Guest';
 var apiUrl = 'https://api.parse.com/1/classes/chatterbox';
-var roomTimeStamp = {}; // ROOM TIMESTAMP AS OBJECT {roomname: last time stamp}
+var roomTimeStamp = {}; 
+
+/*****************************************************************************/
+/* MODEL-ACCESSORS                                                           */
+/*****************************************************************************/
+var setRoomName = function(name){
+  if(roomName !== name){
+    roomName = name;
+    resetChatView();
+    roomTimeStamp[name] = '';
+  }
+};
+
+var getChatRooms = function(aCallback){
+  aCallback = aCallback || function(item){console.log(item)}; 
+  $.ajax({
+    url: apiUrl,
+    type: 'GET',
+    contentType: 'application/json',
+    data: {order:"-createdAt",limit:200},
+    success: function (data) {
+      // AIM #1: GET LIST OF LAST ROOMS; RESULT: AN ORDERED ARRAY OF ROOMS 
+      var roomList = _.filter(_.uniq(_.pluck(data.results, 'roomname')), function(item){
+        return !!item;
+      });
+      aCallback(roomList);
+      // AIM #2: LAST TIME PER ROOM
+      _.each(data.results, function(item){
+        if(!roomTimeStamp[item.roomname] || (new Date(roomTimeStamp[item.roomname])) < (new Date(item.createdAt))){
+ 
+          roomTimeStamp[item.roomname] = item.createdAt;
+          console.log("Updated timestamp", item.roomname, new Date(roomTimeStamp[item.roomname]), new Date(item.createdAt));
+        }
+      });
+    },
+    error: function (data) {
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message');
+    }
+  })
+};
+
+var getMessages = function(roomName){
+  var messageDate = roomTimeStamp[roomName] || "2011-03-11T09:34:08.256Z";
+  $.ajax({
+    url: apiUrl,
+    type: 'GET',
+    contentType: 'application/json',
+    data: {
+      order:"-createdAt",
+      limit:200,
+      where:JSON.stringify({"roomname":roomName, "createdAt":{"$gt":{"__type":"Date", "iso":messageDate}}})
+    },
+    success: function (data) { 
+
+      var results = _.reject(data.results, function(item){
+        return (new Date(item.createdAt)) > (new Date(roomTimeStamp[roomName]));
+      });
+      console.log(results);
+      if(data.results[0] && data.results[0].createdAt){
+        roomTimeStamp[roomName] = data.results[0].createdAt;
+      }
+      appendDiv(results);
+    },
+    error: function (data) {
+      console.error('chatterbox: Failed to send message');
+    }
+  });
+};
+
+var send = function(aMessage){
+  $.ajax({
+    url: apiUrl,
+    type: 'POST',
+    data: JSON.stringify({
+    'username': userName,
+    'text': aMessage,
+    'roomname': roomName
+  }),
+    contentType: 'application/json',
+    success: function (data) {
+      console.log('chatterbox: Message sent');
+    },
+    error: function (data) {
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message');
+    }
+  });
+};
+
+var refreshRoomList = function(rooms){
+  // ERASE EVERYTHING
+  $('#sidebar #roomlist').html('');
+  // AIM: ORDER BY LAST POST DATE
+  _.each(rooms, function(room, i){
+    $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
+  });
+  $("li.roomName").on('click', function(){
+    setRoomName($(this).text());
+    $('input[name=roomname]').val(roomName);
+    getMessages(roomName);
+  });
+};
+
+/*****************************************************************************/
+/* VIEW                                                                      */
+/*****************************************************************************/
+var resetChatView = function(){
+  $("#chatbox").html("");
+};
 
 var appendDiv = function(messages){
-  $('#chatbox').html('');
-
+  messages.reverse();
   _.each(messages, function(item, i){
-    // CHECK FOR PRESENCE IN MESSAGE
-    // IF is in Cache THEN 
-
     // STERILISE
     var aUsername = item.username || 'guest';
     var aMessage = item.text || 'default text';
@@ -27,12 +135,11 @@ var appendDiv = function(messages){
       MESSAGE: aMessage,
       DATE: createdAt
     }, template));
-
-    // STORE IN CACHE
     
-    $("#chatbox").append($node);
+    $("#chatbox").prepend($node);
   });
 };
+
 var templateMe = function(object, pattern){
   _.each(object, function(value, key){
     value = escapeMe(value);
@@ -53,119 +160,34 @@ var escapeMe = function(str) {
   return String(str).replace(/[&<>"'\/]/g, function (s) {
     return entityMap[s];
   });
-}
-var getRoomList = function(aCallback){
-  aCallback = aCallback || function(item){console.log(item)}; 
-  $.ajax({
-    // always use this url
-    url: apiUrl,
-    type: 'GET',
-    contentType: 'application/json',
-    data: {order:"-createdAt",limit:200},
-    success: function (data) {
-      _.each(data.results, function(item){
-        var itemDate = new Date(item.createdAt);
-        var key = item.roomname;
-        (!roomTimeStamp[key] || itemDate > roomTimeStamp[key]) && (roomTimeStamp[key] = itemDate);
-      });
-      aCallback(_.filter(_.uniq(_.pluck(data.results, 'roomname')), function(item){
-        return !!item;
-      }));
-    },
-    error: function (data) {
-      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message');
-    }
-  })
 };
 
-var getMessages = function(roomName){
-//, "createdAt":{"$gt":{"__type":"Date", "iso":"2012-04-30T09:34:08.256Z"}}
-  $.ajax({
-    // always use this url
-    url: apiUrl,
-    type: 'GET',
-    contentType: 'application/json',
-    data: {
-      order:"-createdAt",
-      limit:10,
-      where:JSON.stringify({"roomname":roomName})// order:{"-createdAt":{"$gte":timestamp}},
-    },
-    success: function (data) { 
-      console.log(data);
-      appendDiv(data.results);
-      // roomTimeStamp[roomName] = data.results[0].createdAt;
-    },
-    error: function (data) {
-      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message');
-    }
-  });
-}
-
-var sendMessage = function(aMessage){
-  $.ajax({
-    url: apiUrl,
-    type: 'POST',
-    data: JSON.stringify({
-    'username': userName,
-    'text': aMessage,
-    'roomname': roomName
-  }),
-    contentType: 'application/json',
-    success: function (data) {
-      console.log('chatterbox: Message sent');
-    },
-    error: function (data) {
-      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message');
-    }
-  });
-};
-var refreshRoomList = function(rooms){
-  // ERASE EVERYTHING
-  $('#sidebar #roomlist').html('');
-  // AIM: ORDER BY LAST POST DATE
-  _.each(rooms, function(room, i){
-    $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
-  });
-  $("li.roomName").on('click', function(){
-
-    roomName = $(this).text();
-    $('input[name=roomname]').val(roomName);
-    getMessages(roomName);
-  });
-}
-// INIT
-getMessages(roomName);
-getRoomList(refreshRoomList);
-// REFRESH
-
+/*****************************************************************************/
+/* INITIALIZATION / RUNTIME                                                  */
+/*****************************************************************************/
 $(document).ready(function(){
-  
-  // INPUT MESSAGE
   $("input[name=message]").keypress(function(event){
     if(event.keyCode === 13){
-      roomName = $('input[name=roomname]').val();
+      setRoomName($('input[name=roomname]').val());
       userName = $('input[name=username]').val();
-      sendMessage($(this).val());
+      send($(this).val());
       $(this).val("");
       getMessages(roomName);
-      getRoomList(refreshRoomList);
+      getChatRooms(refreshRoomList);
     }
   });
   $("input[name=roomname]").keypress(function(event){
     if(event.keyCode === 13){
-      roomName = $('input[name=roomname]').val();
+      setRoomName($('input[name=roomname]').val());
       getMessages(roomName);
-      getRoomList(refreshRoomList);
+      getChatRooms(refreshRoomList);
     }
   });
   setInterval(function(){
     getMessages(roomName);
   }, 1000);
   setInterval(function(){
-    getRoomList(refreshRoomList);
+    getChatRooms(refreshRoomList);
   }, 1000);
 });
 
