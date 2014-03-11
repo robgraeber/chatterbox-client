@@ -1,7 +1,7 @@
 var roomName = "4chan";
 var userName = 'Guest';
 var apiUrl = 'https://api.parse.com/1/classes/chatterbox';
-var lastTimestamp = {};
+var roomTimeStamp = {}; // ROOM TIMESTAMP AS OBJECT {roomname: last time stamp}
 
 var appendDiv = function(messages){
   $('#chatbox').html('');
@@ -63,6 +63,11 @@ var getRoomList = function(aCallback){
     contentType: 'application/json',
     data: {order:"-createdAt",limit:200},
     success: function (data) {
+      _.each(data.results, function(item){
+        var itemDate = new Date(item.createdAt);
+        var key = item.roomname;
+        (!roomTimeStamp[key] || itemDate > roomTimeStamp[key]) && (roomTimeStamp[key] = itemDate);
+      });
       aCallback(_.filter(_.uniq(_.pluck(data.results, 'roomname')), function(item){
         return !!item;
       }));
@@ -84,12 +89,12 @@ var getMessages = function(roomName){
     data: {
       order:"-createdAt",
       limit:10,
-      where:JSON.stringify({"roomname":"4chan", "createdAt":{"$gt":{"__type":"Date", "iso":"2013-03-11T09:34:08.256Z"}}})// order:{"-createdAt":{"$gte":timestamp}},
+      where:JSON.stringify({"roomname":roomName})// order:{"-createdAt":{"$gte":timestamp}},
     },
     success: function (data) { 
       console.log(data);
       appendDiv(data.results);
-      // lastTimestamp[roomName] = data.results[0].createdAt;
+      // roomTimeStamp[roomName] = data.results[0].createdAt;
     },
     error: function (data) {
       // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
