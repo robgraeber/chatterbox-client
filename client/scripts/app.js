@@ -1,16 +1,23 @@
 var roomName = "4chan";
 var userName = 'Guest';
+var apiUrl = 'https://api.parse.com/1/classes/chatterbox';
+var lastTimestamp = {};
 
 var appendDiv = function(messages){
   $('#chatbox').html('');
+
   _.each(messages, function(item, i){
+    // CHECK FOR PRESENCE IN MESSAGE
+    // IF is in Cache THEN 
+
     // STERILISE
     var aUsername = item.username || 'guest';
     var aMessage = item.text || 'default text';
     var createdAt = moment(item.createdAt).fromNow() || '?';
 
     // CONCATENATE TEMPLATE
-    var template  = "<span class='username'>{{USERNAME}}</span>";
+    var template = "<img src='images/spy.png' height='13'/> ";
+    template += "<span class='username'>{{USERNAME}}</span>";
     template += "<span class='message'>{{MESSAGE}}</span>";
     template += "<span class='date'>{{DATE}}</span>";
 
@@ -20,6 +27,8 @@ var appendDiv = function(messages){
       MESSAGE: aMessage,
       DATE: createdAt
     }, template));
+
+    // STORE IN CACHE
     
     $("#chatbox").append($node);
   });
@@ -49,7 +58,7 @@ var getRoomList = function(aCallback){
   aCallback = aCallback || function(item){console.log(item)}; 
   $.ajax({
     // always use this url
-    url: 'https://api.parse.com/1/classes/chatterbox',
+    url: apiUrl,
     type: 'GET',
     contentType: 'application/json',
     data: {order:"-createdAt",limit:200},
@@ -66,17 +75,22 @@ var getRoomList = function(aCallback){
 };
 
 var getMessages = function(roomName){
+//, "createdAt":{"$gt":{"__type":"Date", "iso":"2012-04-30T09:34:08.256Z"}}
   $.ajax({
     // always use this url
-    url: 'https://api.parse.com/1/classes/chatterbox',
+    url: apiUrl,
     type: 'GET',
     contentType: 'application/json',
     data: {
       order:"-createdAt",
       limit:10,
-      where:{"roomname":roomName}
+      where:{"roomname":roomName}// order:{"-createdAt":{"$gte":timestamp}},
     },
-    success: function (data) { appendDiv(data.results);},
+    success: function (data) { 
+      console.log(data);
+      appendDiv(data.results);
+      // lastTimestamp[roomName] = data.results[0].createdAt;
+    },
     error: function (data) {
       // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
       console.error('chatterbox: Failed to send message');
@@ -86,7 +100,7 @@ var getMessages = function(roomName){
 
 var sendMessage = function(aMessage){
   $.ajax({
-    url: 'https://api.parse.com/1/classes/chatterbox',
+    url: apiUrl,
     type: 'POST',
     data: JSON.stringify({
     'username': userName,
