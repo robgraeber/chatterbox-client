@@ -127,6 +127,7 @@ var refreshRoomList = function(rooms){
   $("li.roomName").on('click', function(){
 
     roomName = $(this).text();
+    $('input[name=roomname]').val(roomName);
     getMessages(roomName);
   });
 }
@@ -144,6 +145,13 @@ $(document).ready(function(){
       userName = $('input[name=username]').val();
       sendMessage($(this).val());
       $(this).val("");
+      getMessages(roomName);
+      getRoomList(refreshRoomList);
+    }
+  });
+  $("input[name=roomname]").keypress(function(event){
+    if(event.keyCode === 13){
+      roomName = $('input[name=roomname]').val();
       getMessages(roomName);
       getRoomList(refreshRoomList);
     }
