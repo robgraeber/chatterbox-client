@@ -8,7 +8,7 @@
     <!-- dependencies -->
     <script src="jquery/jquery.min.js"></script>
     <script src="underscore/underscore.js"></script>
-    <script src="handlebars/handlebars.min.js"></script>
+    <script src="momentjs/moment.js"></script>
     <!-- your scripts -->
     <script src="scripts/config.js"></script>
     <script src="scripts/app.js"></script>
@@ -16,33 +16,34 @@
   <body>
     <div id="page">
       <div id="sidebar">
-        <div id="roomlist"></div>
-        <div id="friendlist"></div>
-      </div>
-      <div id="main">
-        <h1>chatterbox</h1>
-        <!-- Your HTML goes here! -->
-        <div id="chatbox"></div>
+        
         <div class="inputLine">
-          <div class="inputName">Room name: </div>
+          <div class="inputName">User name</div>
+          <div class="inputContent">
+            <input type="text" name="username" value="guest"/> 
+          </div>  
+        </div>
+
+        <div class="inputLine">
+          <div class="inputName">Current Room</div>
           <div class="inputContent">
             <input type="text" name="roomname" value="4chan"/>
           </div> 
         </div>
 
-        <div class="inputLine">
-          <div class="inputName">User name: </div>
-          <div class="inputContent">
-            <input type="text" name="username" value="guest"/>
-          </div>  
-        </div>
+        <div class="inputName">Active Rooms</div>
+        <div id="roomlist"></div>
 
-        <div class="inputLine">
-          <div class="inputName">Message: </div>
-          <div class="inputContent">
+        <div id="friendlist"></div>
+      
+      </div>
+      <div id="main">
+        <h1>NSA Spy Bot</h1>
+
             <input type="text" name="message"/>
-          </div>
-        </div>
+
+        <div id="chatbox"></div>
+
       </div>
     </div>
   </body>

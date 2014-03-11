@@ -1,25 +1,50 @@
 var roomName = "4chan";
-var userName = 'Rob';
+var userName = 'Guest';
 
 var appendDiv = function(messages){
   $('#chatbox').html('');
   _.each(messages, function(item, i){
-    var aUsername = item.username || 'guest' ;
-    var aMessage = item.text || 'default text' ;
-    var createdAt = item.createdAt || '?';
-    var $node = $("<div class='chatMessage'></div>").text(createdAt +' '+ aUsername.substring(0, 25) +": "+aMessage.substring(0,140));
-    var template = "{{DATE}} {{USERNAME}} {{MESSAGE}}";
-    
+    // STERILISE
+    var aUsername = item.username || 'guest';
+    var aMessage = item.text || 'default text';
+    var createdAt = moment(item.createdAt).fromNow() || '?';
+
+    // CONCATENATE TEMPLATE
+    var template  = "<span class='username'>{{USERNAME}}</span>";
+    template += "<span class='message'>{{MESSAGE}}</span>";
+    template += "<span class='date'>{{DATE}}</span>";
+
+    // CALL TO ENGINE
+    var $node = $("<div class='chatMessage'></div>").html(templateMe({
+      USERNAME: aUsername,
+      MESSAGE: aMessage,
+      DATE: createdAt
+    }, template));
     
     $("#chatbox").append($node);
   });
 };
 var templateMe = function(object, pattern){
   _.each(object, function(value, key){
+    value = escapeMe(value);
     pattern = pattern.replace(RegExp('{{'+key+'}}','g'), value);
   });
   return pattern;
 };
+
+var escapeMe = function(str) {
+  var entityMap = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': '&quot;',
+    "'": '&#39;',
+    "/": '&#x2F;'
+  };
+  return String(str).replace(/[&<>"'\/]/g, function (s) {
+    return entityMap[s];
+  });
+}
 var getRoomList = function(aCallback){
   aCallback = aCallback || function(item){console.log(item)}; 
   $.ajax({
@@ -27,7 +52,7 @@ var getRoomList = function(aCallback){
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
     contentType: 'application/json',
-    data: {limit:200},
+    data: {order:"-createdAt",limit:200},
     success: function (data) {
       aCallback(_.filter(_.uniq(_.pluck(data.results, 'roomname')), function(item){
         return !!item;
@@ -79,7 +104,9 @@ var sendMessage = function(aMessage){
   });
 };
 var refreshRoomList = function(rooms){
+  // ERASE EVERYTHING
   $('#sidebar #roomlist').html('');
+  // AIM: ORDER BY LAST POST DATE
   _.each(rooms, function(room, i){
     $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
   });
@@ -100,6 +127,7 @@ $(document).ready(function(){
   $("input[name=message]").keypress(function(event){
     if(event.keyCode === 13){
       roomName = $('input[name=roomname]').val();
+      userName = $('input[name=username]').val();
       sendMessage($(this).val());
       $(this).val("");
       getMessages(roomName);

@@ -11,6 +11,23 @@ body {
   text-align:left;
   padding:10px;
 }
+span.username {
+  font-weight:bold;
+  color: darkblue;
+}
+span.username:after {
+  content:': ';
+}
+span.message{
+  display:block;
+  overflow: none;
+  word-wrap:break-word;
+  width:450px;
+}
+span.date{
+  font-size:0.5em;
+  float: right;
+}
 .inputName{
   width:20%;
   display: inline;
@@ -35,7 +52,7 @@ body {
     margin: auto;
     text-align: left;
     background: white;
-    padding: 50px 60px;
+    padding: 20px 60px;
     border: solid #ddd;
     border-width: 0 1px 1px 1px;
 }
