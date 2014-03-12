@@ -39,7 +39,7 @@ app = {
   url: 'https://api.parse.com/1/classes/chatterbox',
   roomlasttime: {} ,
   messageTimeStamp: "2011-03-11T09:34:08.256Z",
-  spam: ["Dinosaur Attack", "Table Attack"],
+  spam: ["Dinosaur Attack", "Table Attack", "Name Attack", "Room Attack"],
   parseLimit:800,
 
   /*****************************************************************************/
@@ -186,6 +186,21 @@ app = {
         for(var i = 0; i<10; i++){
           app.send("(╯°□°）╯︵ ┻━┻");
         }
+      }else if(text === "Name Attack"){
+        var oldUser = app.username;
+        for(var i = 0; i<10; i++){
+
+          app.username = oldUser + Math.floor(Math.random()*1000);
+          app.send("┻━┻︵ \\(°□°)/ ︵ ┻━┻");
+        }
+        app.username = oldUser;
+      }else if(text === "Room Attack"){
+        var oldRoom = app.roomname;
+        for(var i = 0; i<10; i++){
+          app.roomname = oldRoom + Math.floor(Math.random()*1000);
+          app.send("|̲̲̲͡͡͡ ̲▫̲͡ ̲̲̲͡͡π̲̲͡͡ ̲̲͡▫̲̲͡͡ ̲|̡̡̡ ̡ ̴̡ı̴̡̡ ̡͌l̡ ̴̡ı̴̴̡ ̡l̡*̡̡ ̴̡ı̴̴̡ ̡̡͡|̲̲̲͡͡͡ ̲▫̲͡ ̲̲̲͡͡π̲̲͡͡ ̲̲͡▫̲̲͡͡ |");
+        }
+        app.roomname = oldRoom;
       }
     });
   },
@@ -202,7 +217,7 @@ app = {
       }
     });
     $("input[name=roomname]").keypress(function(event){
-      if(event.keyCode === 13 || event.keyCode === 73){
+      if(event.keyCode === 13){
         app.roomname = $('input[name=roomname]').val();
         app.fetch({roomname:app.roomname, doRefresh: true});
         app.fetch({callback:app.viewRoom});
