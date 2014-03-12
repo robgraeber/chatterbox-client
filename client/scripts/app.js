@@ -97,7 +97,7 @@ app = {
         });
       }
     } else { // GET MESSAGE 
-      if(arg['fullRefresh']){
+      if(arg['doRefresh']){
         app.messageTimeStamp = "2011-03-11T09:34:08.256Z";
       } 
       ajaxJson['data']['where'] = JSON.stringify({"roomname":arg['roomname']});
@@ -108,7 +108,7 @@ app = {
         });
         if(results.length > 0 && arg['roomname'] === app.roomname){
           app.messageTimeStamp = results[0].createdAt;
-          app.viewMessage(results, arg['fullRefresh']); 
+          app.viewMessage(results, arg['doRefresh']); 
         }
       };
     }
@@ -127,8 +127,8 @@ app = {
     app.eventSpam();
   },
 
-  viewMessage:function(messages, fullRefresh){
-    if(fullRefresh){
+  viewMessage:function(messages, doRefresh){
+    if(doRefresh){
       $("#chatbox").html("");
     }
     messages.reverse();
@@ -169,7 +169,7 @@ app = {
   eventRoom:function(){
     $("li.roomname").on('click', function(){
       app.roomname = $(this).text();
-      app.fetch({roomname:app.roomname, fullRefresh: true});
+      app.fetch({roomname:app.roomname, doRefresh: true});
       $('input[name=roomname]').val(app.roomname);
     });
   },
@@ -179,8 +179,7 @@ app = {
       if(text === "Dinosaur Attack"){
         for(var i = 0; i<10; i++){
           var random = Math.floor(Math.random()*70);
-          var str = "Dino Attack!!!!!!!!!!!!!";
-          for(var j = 0; j<random; j++, str += "!");
+          for(var str = "Dino Attack!!!!!!!!!!!!!", j = 0; j<random; j++, str += "!");
           app.send(str);
         }
       }
@@ -195,13 +194,13 @@ app = {
         app.send($(this).val());
         $(this).val("");
         app.fetch({roomname:app.roomname});
-        app.fetch({callback:app.viewRoom, fullRefresh: (app.roomname !== oldRoomName)});
+        app.fetch({callback:app.viewRoom, doRefresh: (app.roomname !== oldRoomName)});
       }
     });
     $("input[name=roomname]").keypress(function(event){
       if(event.keyCode === 13 || event.keyCode === 73){
         app.roomname = $('input[name=roomname]').val();
-        app.fetch({roomname:app.roomname, fullRefresh: true});
+        app.fetch({roomname:app.roomname, doRefresh: true});
         app.fetch({callback:app.viewRoom});
       }
     });
