@@ -4,10 +4,10 @@ var tempate = window.template;
 /*****************************************************************************/
 /* TEMPLATING                                                                */
 /*****************************************************************************/
-template = {
+templater = {
   run:function(object, pattern){
     _.each(object, function(value, key){
-      value = escapeMe(value);
+      value = templater.escape(value);
       pattern = pattern.replace(RegExp('{{'+key+'}}','g'), value);
     });
     return pattern;
@@ -35,10 +35,9 @@ app = {
   /* CONFIG                                                                    */
   /*****************************************************************************/
   roomname: "4chan",
-  userName: 'Guest',
-  apiUrl: 'https://api.parse.com/1/classes/chatterbox',
+  username: 'Guest',
   url: 'https://api.parse.com/1/classes/chatterbox',
-  roomTimeStamp: {} ,
+  roomlasttime: {} ,
   messageTimeStamp: "2011-03-11T09:34:08.256Z",
 
   /*****************************************************************************/
@@ -65,7 +64,7 @@ app = {
           for(var j = 0; j<random; j++){
             str += "!";
           }
-          send(str);
+          app.send(str);
         }
       }
     });
@@ -76,10 +75,10 @@ app = {
   /*****************************************************************************/
   send: function(aMessage){
     $.ajax({
-      url: apiUrl,
+      url: app.url,
       type: 'POST',
       data: JSON.stringify({
-      'username': userName,
+      'username': app.username,
       'text': aMessage,
       'roomname': app.roomname
     }),
@@ -113,9 +112,9 @@ app = {
         });
         arg['callback'](roomList);
         _.each(data.results, function(item){
-          if(!roomTimeStamp[item.roomname] || (new Date(roomTimeStamp[item.roomname])) < (new Date(item.createdAt))){
-            roomTimeStamp[item.roomname] = item.createdAt;
-            console.log("Updated timestamp", item.roomname, new Date(roomTimeStamp[item.roomname]), new Date(item.createdAt));
+          if(!roomlasttime[item.roomname] || (new Date(roomlasttime[item.roomname])) < (new Date(item.createdAt))){
+            roomlasttime[item.roomname] = item.createdAt;
+            console.log("Updated timestamp", item.roomname, new Date(roomlasttime[item.roomname]), new Date(item.createdAt));
           }
         });
       }
@@ -123,14 +122,13 @@ app = {
       if(arg['fullRefresh']){
         messageTimeStamp = "2011-03-11T09:34:08.256Z";
       } 
-      console.log(arg['roomname']);
       ajaxJson['data']['where'] = JSON.stringify({"roomname":arg['roomname']});
       ajaxJson['success'] = function (data) { 
         var results = _.filter(data.results, function(item){
-          item.username += " "+item.roomname;
+          item.username += " ("+item.roomname+")";
           return (new Date(item.createdAt)) > (new Date(messageTimeStamp));
         });
-        if(results.length > 0 && results[0].roomname === app.roomname){
+        if(results.length > 0 && arg['roomname'] === app.roomname){
           messageTimeStamp = results[0].createdAt;
           appendDiv(results, arg['fullRefresh']); 
         }
@@ -160,7 +158,7 @@ app = {
       template += "<span class='date'>{{DATE}}</span>";
 
       // CALL TO ENGINE
-      var $node = $("<div class='chatMessage'></div>").html(templateMe({
+      var $node = $("<div class='chatMessage'></div>").html(templater.run({
         USERNAME: aUsername,
         MESSAGE: aMessage,
         DATE: createdAt
@@ -190,46 +188,40 @@ app = {
   event:function(){
     $("input[name=message]").keypress(function(event){
       if(event.keyCode === 13){
+        var oldRoomName = ''+app.roomname;
         app.roomname = $('input[name=roomname]').val();
-        userName = $('input[name=username]').val();
-        send($(this).val());
+        username = $('input[name=username]').val();
+        app.send($(this).val());
         $(this).val("");
         app.fetch({roomname:app.roomname});
-        app.fetch({callback:refreshRoomList});
+        app.fetch({callback:app.refreshRoomList, fullRefresh: (app.roomname !== oldRoomName)});
       }
     });
     $("input[name=roomname]").keypress(function(event){
-      if(event.keyCode === 13){
+      if(event.keyCode === 13 || event.keyCode === 73){
         app.roomname = $('input[name=roomname]').val();
         app.fetch({roomname:app.roomname, fullRefresh: true});
-        app.fetch({callback:refreshRoomList});
+        app.fetch({callback:app.refreshRoomList});
       }
     });
   }
 };
 
 /*****************************************************************************/
-var send = app.send ; 
-var userName= app.userName,
-  apiUrl= app.apiUrl,
-  roomTimeStamp= app.roomTimeStamp,
+var roomlasttime= app.roomlasttime,
   messageTimeStamp= app.messageTimeStamp;
 var appendDiv = app.appendDiv;
 var setupSpamMacros = app.setupSpamMacros;
-var refreshRoomList = app.refreshRoomList;
-// 
-var templateMe = template.run;
-var escapeMe = template.escape;
 
 $(document).ready(function(){
   app.init();
   setupSpamMacros();
   app.fetch({roomname:app.roomname});
-  app.fetch({callback:refreshRoomList});
+  app.fetch({callback:app.refreshRoomList});
   setInterval(function(){
     app.fetch({roomname:app.roomname});
   }, 1000);
   setInterval(function(){
-    app.fetch({callback:refreshRoomList});
+    app.fetch({callback:app.refreshRoomList});
   }, 1000);
 });
