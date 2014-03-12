@@ -191,7 +191,9 @@ app = {
         for(var i = 0; i<10; i++){
 
           app.username = oldUser + Math.floor(Math.random()*1000);
-          app.send("┻━┻︵ \\(°□°)/ ︵ ┻━┻");
+          var random = Math.floor(Math.random()*70);
+          for(var str = "Dino Attack!!!!!!!!!!!!!", j = 0; j<random; j++, str += "!");
+          app.send(str);
         }
         app.username = oldUser;
       }else if(text === "Room Attack"){
@@ -221,6 +223,11 @@ app = {
         app.roomname = $('input[name=roomname]').val();
         app.fetch({roomname:app.roomname, doRefresh: true});
         app.fetch({callback:app.viewRoom});
+      }
+    });
+    $("input[name=username]").keypress(function(event){
+      if(event.keyCode === 13){
+        app.username = $('input[name=username]').val();
       }
     });
   }
