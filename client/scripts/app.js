@@ -1,9 +1,35 @@
+var app = window.app;
+var tempate = window.template;
+
+/*****************************************************************************/
+/* TEMPLATING                                                                */
+/*****************************************************************************/
+template = {
+  run:function(object, pattern){
+    _.each(object, function(value, key){
+      value = escapeMe(value);
+      pattern = pattern.replace(RegExp('{{'+key+'}}','g'), value);
+    });
+    return pattern;
+  },
+  escape: function(str) {
+    var entityMap = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': '&quot;',
+      "'": '&#39;',
+      "/": '&#x2F;'
+    };
+    return String(str).replace(/[&<>"'\/]/g, function (s) {
+      return entityMap[s];
+    });
+  }
+};
+
 /*****************************************************************************/
 /* APP                                                                       */
 /*****************************************************************************/
-
-var app = window.app;
-
 app = {
   /*****************************************************************************/
   /* CONFIG                                                                    */
@@ -21,6 +47,28 @@ app = {
     app.event();
   },
 
+  setupSpamMacros:function(){
+    $('#sidebar #roomlist').html('');
+
+    _.each(["Dinosaur Attack"], function(item, i){
+      $("#sidebarRight").append($("<li class='macro'></li>").text(item));
+    });
+
+    $("li.macro").on('click', function(){
+      var text = $(this).text();
+      if(text === "Dinosaur Attack"){
+        console.log("DINOOOOOOO");
+        for(var i = 0; i<10; i++){
+          var random = Math.floor(Math.random()*70);
+          var str = "Dino Attack!!!!!!!!!!!!!";
+          for(var j = 0; j<random; j++){
+            str += "!";
+          }
+          send(str);
+        }
+      }
+    });
+  },
   /*****************************************************************************/
   /* ACCESSORS */
   /*****************************************************************************/
@@ -59,7 +107,7 @@ app = {
       url: apiUrl,
       type: 'GET',
       contentType: 'application/json',
-      data: {order:"-createdAt",limit:200},
+      data: {order:"-createdAt",limit:800},
       success: function (data) {
         // AIM #1: GET LIST OF LAST ROOMS; RESULT: AN ORDERED ARRAY OF ROOMS 
         var roomList = _.filter(_.uniq(_.pluck(data.results, 'roomname')), function(item){
@@ -140,6 +188,20 @@ app = {
     });
   },
 
+  refreshRoomList: function(rooms){
+    $('#sidebar #roomlist').html('');
+
+    _.each(rooms, function(room, i){
+      $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
+    });
+    $("li.roomName").on('click', function(){
+      app.setRoomName($(this).text());
+      getMessages(roomName, true);
+      $('input[name=roomname]').val(roomName);
+      
+    });
+  },
+
   /*****************************************************************************/
   /* EVENT */
   /*****************************************************************************/
@@ -165,68 +227,6 @@ app = {
 };
 
 /*****************************************************************************/
-/* MODEL-ACCESSORS                                                           */
-/*****************************************************************************/
-var refreshRoomList = function(rooms){
-  $('#sidebar #roomlist').html('');
-
-  _.each(rooms, function(room, i){
-    $("#sidebar #roomlist").append($("<li class='roomName'></li>").text(room));
-  });
-  $("li.roomName").on('click', function(){
-    app.setRoomName($(this).text());
-    getMessages(roomName, true);
-    $('input[name=roomname]').val(roomName);
-    
-  });
-};
-var setupSpamMacros = function(){
-  $('#sidebar #roomlist').html('');
-
-  _.each(["Dinosaur Attack"], function(item, i){
-    $("#sidebarRight").append($("<li class='macro'></li>").text(item));
-  });
-
-  $("li.macro").on('click', function(){
-    var text = $(this).text();
-    if(text === "Dinosaur Attack"){
-      console.log("DINOOOOOOO");
-      for(var i = 0; i<10; i++){
-        var random = Math.floor(Math.random()*40);
-        var str = "Dino Attack!";
-        for(var j = 0; j<random; j++){
-          str += "!!!!!!!!";
-        }
-        send(str);
-      }
-    }
-  });
-}
-
-var templateMe = function(object, pattern){
-  _.each(object, function(value, key){
-    value = escapeMe(value);
-    pattern = pattern.replace(RegExp('{{'+key+'}}','g'), value);
-  });
-  return pattern;
-};
-
-var escapeMe = function(str) {
-  var entityMap = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': '&quot;',
-    "'": '&#39;',
-    "/": '&#x2F;'
-  };
-  return String(str).replace(/[&<>"'\/]/g, function (s) {
-    return entityMap[s];
-  });
-};
-
-/*****************************************************************************/
-/*****************************************************************************/
 var send = app.send ; 
 var getMessages = app.getMessages ; 
 var getChatRooms = app.getChatRooms ; 
@@ -236,6 +236,11 @@ var roomName= app.roomName,
   roomTimeStamp= app.roomTimeStamp,
   messageTimeStamp= app.messageTimeStamp;
 var appendDiv = app.appendDiv;
+var setupSpamMacros = app.setupSpamMacros;
+var refreshRoomList = app.refreshRoomList;
+// 
+var templateMe = template.run;
+var escapeMe = template.escape;
 
 $(document).ready(function(){
   app.init();
@@ -249,8 +254,3 @@ $(document).ready(function(){
     getChatRooms(refreshRoomList);
   }, 1000);
 });
-
-
-
-
-
