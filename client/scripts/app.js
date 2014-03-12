@@ -39,7 +39,7 @@ app = {
   url: 'https://api.parse.com/1/classes/chatterbox',
   roomlasttime: {} ,
   messageTimeStamp: "2011-03-11T09:34:08.256Z",
-  spam: ["Dinosaur Attack"],
+  spam: ["Dinosaur Attack", "Table Attack"],
   parseLimit:800,
 
   /*****************************************************************************/
@@ -182,6 +182,10 @@ app = {
           for(var str = "Dino Attack!!!!!!!!!!!!!", j = 0; j<random; j++, str += "!");
           app.send(str);
         }
+      }else if(text === "Table Attack"){
+        for(var i = 0; i<10; i++){
+          app.send("(╯°□°）╯︵ ┻━┻");
+        }
       }
     });
   },
@@ -190,7 +194,7 @@ app = {
       if(event.keyCode === 13){
         var oldRoomName = ''+app.roomname;
         app.roomname = $('input[name=roomname]').val();
-        username = $('input[name=username]').val();
+        app.username = $('input[name=username]').val();
         app.send($(this).val());
         $(this).val("");
         app.fetch({roomname:app.roomname});
