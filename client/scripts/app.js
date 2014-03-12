@@ -1,8 +1,8 @@
 var app = window.app;
-var tempate = window.template;
+var tempater = window.templater;
 
 /*****************************************************************************/
-/* TEMPLATING                                                                */
+/* TEMPLATER                                                                 */
 /*****************************************************************************/
 templater = {
   run:function(object, pattern){
@@ -39,70 +39,48 @@ app = {
   url: 'https://api.parse.com/1/classes/chatterbox',
   roomlasttime: {} ,
   messageTimeStamp: "2011-03-11T09:34:08.256Z",
+  spam: ["Dinosaur Attack"],
+  parseLimit:800,
 
   /*****************************************************************************/
   /* INIT */
   /*****************************************************************************/
   init: function(){
     app.event();
-  },
-
-  setupSpamMacros:function(){
-    $('#sidebar #roomlist').html('');
-
-    _.each(["Dinosaur Attack"], function(item, i){
-      $("#sidebarRight").append($("<li class='macro'></li>").text(item));
-    });
-
-    $("li.macro").on('click', function(){
-      var text = $(this).text();
-      if(text === "Dinosaur Attack"){
-        console.log("DINOOOOOOO");
-        for(var i = 0; i<10; i++){
-          var random = Math.floor(Math.random()*70);
-          var str = "Dino Attack!!!!!!!!!!!!!";
-          for(var j = 0; j<random; j++){
-            str += "!";
-          }
-          app.send(str);
-        }
-      }
-    });
+    app.viewSpam();
+    app.fetch({roomname:app.roomname});
+    app.fetch({callback:app.viewRoom});
+    // INTERVAL 
+    setInterval(function(){
+      app.fetch({roomname:app.roomname});
+    }, 1000);
+    setInterval(function(){
+      app.fetch({callback:app.viewRoom});
+    }, 1000);
   },
 
   /*****************************************************************************/
   /* AJAX */
   /*****************************************************************************/
+  json:function(httpType){
+    return { 
+      url: app.url, 
+      contentType: 'application/json', 
+      type: httpType,
+      data: {order:"-createdAt",limit:app.parseLimit},
+      error: function (data) {console.error('chatterbox: Failed '+httpType);},
+      success: function (data) {console.log('chatterbox: '+httpType+' OK');}
+    };
+  },
+
   send: function(aMessage){
-    $.ajax({
-      url: app.url,
-      type: 'POST',
-      data: JSON.stringify({
-      'username': app.username,
-      'text': aMessage,
-      'roomname': app.roomname
-    }),
-      contentType: 'application/json',
-      success: function (data) {
-        console.log('chatterbox: Message sent');
-      },
-      error: function (data) {
-        // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-        console.error('chatterbox: Failed to send message');
-      }
-    });
+    var ajaxJson = app.json('POST');
+    ajaxJson['data'] = JSON.stringify({'username':app.username, 'text': aMessage, 'roomname': app.roomname});
+    $.ajax(ajaxJson);
   },
 
   fetch:function(arg){
-    var ajaxJson = { 
-      url: app.url, 
-      type: 'GET', 
-      contentType: 'application/json', 
-      data: {order:"-createdAt",limit:800},
-      error: function (data) {
-        console.error('chatterbox: Failed to get message');
-      }
-    };
+    var ajaxJson = app.json('GET');
     if(arg['callback']){ // GET CHAT ROOM LIST 
       arg['callback'] = arg['callback'] || function(item){console.log(item)}; 
       
@@ -112,25 +90,25 @@ app = {
         });
         arg['callback'](roomList);
         _.each(data.results, function(item){
-          if(!roomlasttime[item.roomname] || (new Date(roomlasttime[item.roomname])) < (new Date(item.createdAt))){
-            roomlasttime[item.roomname] = item.createdAt;
-            console.log("Updated timestamp", item.roomname, new Date(roomlasttime[item.roomname]), new Date(item.createdAt));
+          if(!app.roomlasttime[item.roomname] || (new Date(app.roomlasttime[item.roomname])) < (new Date(item.createdAt))){
+            app.roomlasttime[item.roomname] = item.createdAt;
+            console.log("Updated timestamp", item.roomname, new Date(app.roomlasttime[item.roomname]), new Date(item.createdAt));
           }
         });
       }
     } else { // GET MESSAGE 
       if(arg['fullRefresh']){
-        messageTimeStamp = "2011-03-11T09:34:08.256Z";
+        app.messageTimeStamp = "2011-03-11T09:34:08.256Z";
       } 
       ajaxJson['data']['where'] = JSON.stringify({"roomname":arg['roomname']});
       ajaxJson['success'] = function (data) { 
         var results = _.filter(data.results, function(item){
           item.username += " ("+item.roomname+")";
-          return (new Date(item.createdAt)) > (new Date(messageTimeStamp));
+          return (new Date(item.createdAt)) > (new Date(app.messageTimeStamp));
         });
         if(results.length > 0 && arg['roomname'] === app.roomname){
-          messageTimeStamp = results[0].createdAt;
-          appendDiv(results, arg['fullRefresh']); 
+          app.messageTimeStamp = results[0].createdAt;
+          app.viewMessage(results, arg['fullRefresh']); 
         }
       };
     }
@@ -140,7 +118,16 @@ app = {
   /*****************************************************************************/
   /* VIEW                                                                      */
   /*****************************************************************************/
-  appendDiv:function(messages, fullRefresh){
+
+  viewSpam:function(){
+    $('#sidebar #roomlist').html('');
+    _.each(app.spam, function(item, i){
+      $("#sidebarRight").append($("<li class='macro'></li>").text(item));
+    });
+    app.eventSpam();
+  },
+
+  viewMessage:function(messages, fullRefresh){
     if(fullRefresh){
       $("#chatbox").html("");
     }
@@ -168,23 +155,37 @@ app = {
     });
   },
 
-  refreshRoomList: function(rooms){
+  viewRoom: function(rooms){
     $('#sidebar #roomlist').html('');
-
     _.each(rooms, function(room, i){
       $("#sidebar #roomlist").append($("<li class='roomname'></li>").text(room));
     });
-    $("li.roomname").on('click', function(){
-      app.roomname = $(this).text();
-      app.fetch({roomname:app.roomname, fullRefresh: true});
-      $('input[name=roomname]').val(app.roomname);
-      
-    });
+    app.eventRoom();
   },
 
   /*****************************************************************************/
   /* EVENT */
   /*****************************************************************************/
+  eventRoom:function(){
+    $("li.roomname").on('click', function(){
+      app.roomname = $(this).text();
+      app.fetch({roomname:app.roomname, fullRefresh: true});
+      $('input[name=roomname]').val(app.roomname);
+    });
+  },
+  eventSpam:function(){
+    $("li.macro").on('click', function(){
+      var text = $(this).text();
+      if(text === "Dinosaur Attack"){
+        for(var i = 0; i<10; i++){
+          var random = Math.floor(Math.random()*70);
+          var str = "Dino Attack!!!!!!!!!!!!!";
+          for(var j = 0; j<random; j++, str += "!");
+          app.send(str);
+        }
+      }
+    });
+  },
   event:function(){
     $("input[name=message]").keypress(function(event){
       if(event.keyCode === 13){
@@ -194,34 +195,19 @@ app = {
         app.send($(this).val());
         $(this).val("");
         app.fetch({roomname:app.roomname});
-        app.fetch({callback:app.refreshRoomList, fullRefresh: (app.roomname !== oldRoomName)});
+        app.fetch({callback:app.viewRoom, fullRefresh: (app.roomname !== oldRoomName)});
       }
     });
     $("input[name=roomname]").keypress(function(event){
       if(event.keyCode === 13 || event.keyCode === 73){
         app.roomname = $('input[name=roomname]').val();
         app.fetch({roomname:app.roomname, fullRefresh: true});
-        app.fetch({callback:app.refreshRoomList});
+        app.fetch({callback:app.viewRoom});
       }
     });
   }
 };
 
-/*****************************************************************************/
-var roomlasttime= app.roomlasttime,
-  messageTimeStamp= app.messageTimeStamp;
-var appendDiv = app.appendDiv;
-var setupSpamMacros = app.setupSpamMacros;
-
 $(document).ready(function(){
   app.init();
-  setupSpamMacros();
-  app.fetch({roomname:app.roomname});
-  app.fetch({callback:app.refreshRoomList});
-  setInterval(function(){
-    app.fetch({roomname:app.roomname});
-  }, 1000);
-  setInterval(function(){
-    app.fetch({callback:app.refreshRoomList});
-  }, 1000);
 });
