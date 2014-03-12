@@ -33,11 +33,11 @@ span.date{
   width:20%;
   display: inline;
 }
-.roomName{
+.roomname{
   list-style-type: none;
   font-size:.8em;
 }
-.roomName:hover{
+.roomname:hover{
   background-color:lightblue;
 }
 .macro{
